@@ -7,5 +7,6 @@ router.post("/addTask",verifyAdmin,createTask)
 router.put("/updateTask",verifyAdmin,updateTask)
 router.delete("/deleteTask",verifyAdmin,deleteTask)
 router.get("/",verifyToken, getTasks);
+router.get("/all", getTasks);
 
 export default router;
