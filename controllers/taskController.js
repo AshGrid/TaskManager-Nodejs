@@ -77,3 +77,14 @@ export async function deleteTask(req, res) {
     }
 
 }
+
+export async function getTasks(req, res){
+    try {
+        const tasks = await Task.find()
+        res.status(200).json(tasks);
+    }
+    catch (e) {
+        res.status(400).json({ error: "Server error",e});
+
+    }
+}

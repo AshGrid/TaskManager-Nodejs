@@ -1,5 +1,5 @@
 import Router from 'express';
-import {logIn, refreshToken, signUp} from '../controllers/authController.js'
+import {logIn, logOut, refreshToken, signUp} from '../controllers/authController.js'
 import  upload  from '../middlewares/multerConfig.js';
 import validator from '../middlewares/validator.js';
 import{check} from "express-validator";
@@ -12,5 +12,6 @@ router.post('/signup',
     signUp);
 router.post('/login',logIn);
 router.post('/refresh',refreshToken);
+router.post("/logOut",logOut);
 
 export default router;

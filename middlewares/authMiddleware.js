@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken';
 
 
 
+export const blacklistedTokens = new Set();
+
 export function verifyToken(req, res, next) {
     const token = req.headers["authorization"]?.split(" ")[1]; // Extract token from "Bearer <token>"
     if (!token) {
@@ -68,6 +70,18 @@ export function verifySuperAdmin(req, res, next) {
     } catch (err) {
         return res.status(403).json({ error: "Invalid or expired token." });
     }
+}
+
+
+export function checkBlacklist(req, res, next) {
+    const accessToken = req.headers['authorization']?.split(' ')[1];
+    if (accessToken) {
+        const decoded = jwt.decode(accessToken);
+        if (decoded && blacklistedTokens.has(decoded.jti)) {
+            return res.status(401).json({ error: 'Token has been invalidated' });
+        }
+    }
+    next();
 }
 
 

@@ -7,6 +7,7 @@ import fs from "fs";
 import path from "path";
 import {fileURLToPath} from "url";
 import { validationResult } from 'express-validator';
+import { blacklistedTokens } from "../middlewares/authMiddleware.js";
 
 
 export async function signUp(req, res) {
@@ -105,16 +106,26 @@ export async function logIn(req, res){
 
 
         const accessToken = jwt.sign({
-            id: user._id,email:user.email,username:user.name,role:user.role
+            id: user._id,
+            email: user.email,
+            username: user.name,
+            role: user.role
         }, process.env.ACCESS_TOKEN_SECRET, {
-            expiresIn: '10m'
+            expiresIn: '10m',
+            jwtid: `access_${user._id}_${Date.now()}` // Generate unique jti
         });
 
 
 
         const refreshToken = jwt.sign({
-            id: user._id,email:user.email,username:user.name,role:user.role
-        }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '1d' });
+            id: user._id,
+            email: user.email,
+            username: user.name,
+            role: user.role
+        }, process.env.REFRESH_TOKEN_SECRET, {
+            expiresIn: '1d',
+            jwtid: `refresh_${user._id}_${Date.now()}` // Generate unique jti
+        });
 
 
         res.cookie('jwt', refreshToken, {
@@ -133,7 +144,6 @@ export async function logIn(req, res){
         res.status(500).json({ error: 'Login failed' });
     }
 }
-
 
 export async function refreshToken(req,res){
     try {
@@ -168,6 +178,49 @@ export async function refreshToken(req,res){
     catch (e) {
         console.log(e);
         res.status(500).json({ error: 'refresh failed' });
+    }
+}
+
+
+
+export async function logOut(req, res) {
+    try {
+        const refreshToken = req.cookies.jwt;
+        if (refreshToken) {
+            // Verify the refresh token
+            jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
+                if (err) {
+                    return res.status(406).json({ message: 'Unauthorized' });
+                }
+
+                // Add the refresh token's JWT ID (jti) to the blacklist
+                const jti = decoded.jti;
+                blacklistedTokens.add(jti);
+
+                // Clear the refresh token from cookies
+                res.clearCookie('jwt', {
+                    httpOnly: true,
+                    sameSite: 'None',
+                    secure: true,
+                    maxAge: 0, // Expire the cookie immediately
+                });
+            });
+        }
+
+        // Invalidate the access token by adding its jti to the blacklist
+        const accessToken = req.headers['authorization']?.split(' ')[1];
+        if (accessToken) {
+            const decoded = jwt.decode(accessToken);
+            if (decoded) {
+                const jti = decoded.jti;
+                blacklistedTokens.add(jti);
+            }
+        }
+
+        res.status(200).json({ message: 'Logged out successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to log out' });
     }
 }
 

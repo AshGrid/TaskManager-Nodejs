@@ -1,13 +1,16 @@
 import mongoose from 'mongoose';
 
+const dbConnect = async () => {
+    try {
+        await mongoose.connect(process.env.DATABASE_URL, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        console.log('Database connection successful');
+    } catch (err) {
+        console.error('Database connection error:', err);
+        process.exit(1); // Exit the app if the database connection fails
+    }
+};
 
-mongoose.connect('mongodb://127.0.0.1:27017/userdb')
-
-//mongoose.connect('mongodb://localhost:27017/flutter');
-
-const connection = mongoose.connection;
-
-connection.on('error', (err) => console.log(err));
-connection.on('connected', () => console.log('Connection successful'));
-
-export default connection;
+export default dbConnect;

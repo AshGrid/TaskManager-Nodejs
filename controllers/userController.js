@@ -88,10 +88,6 @@ function deleteUploadedFile(filename) {
     }
 }
 
-
-
-
-
 export async function getAllUsers(req, res) {
     try {
         const users = await User.find({}, "-password -password_confirmation"); // Exclude sensitive fields
@@ -99,5 +95,16 @@ export async function getAllUsers(req, res) {
     } catch (err) {
         console.error("Error fetching users:", err);
         res.status(500).json({ error: "Server error" });
+    }
+}
+
+export async function deleteUser(req, res) {
+    try {
+        const { id } = req.body;
+        const deleted = await User.findByIdAndDelete({_id:id})
+        res.status(200).json({message:"User deleted successfully",deleted});
+    }
+    catch (e) {
+        res.status(400).json({ error: "Server error" });
     }
 }
