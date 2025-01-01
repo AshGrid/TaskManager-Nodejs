@@ -14,7 +14,7 @@ import authRoute from "./routes/authRoute.js";
 
 // Database connection
 import dbConnect from "./dbConnect.js";
-import {connection} from "mongoose";
+import connection from "mongoose";
 
 dotenv.config();
 const app = express();
