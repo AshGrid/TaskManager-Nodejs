@@ -45,3 +45,13 @@ export async function updateCategory(req, res) {
 
     }
 }
+
+export async function getCats(req, res) {
+    try {
+        const cats = await Category.find();
+        res.status(200).json(cats);
+    }
+    catch (e) {
+        res.status(400).json({ error: e });
+    }
+}
