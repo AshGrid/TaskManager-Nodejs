@@ -10,5 +10,4 @@ router.use(checkBlacklist);
 router.get("/", verifySuperAdmin, getAllUsers);
 router.post("/create",verifySuperAdmin, createUser);
 router.delete("/delete",checkBlacklist,verifySuperAdmin, deleteUser);
-router.get("/userImage/:id",getUserImage);
 export default router;

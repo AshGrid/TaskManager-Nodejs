@@ -3,6 +3,8 @@ import Category from "../models/Category.js";
 import user from "../models/User.js";
 import User from "../models/User.js";
 
+import verifyToken, {verifyAdmin} from "../middlewares/authMiddleware.js";
+
 export async function createTask(req, res) {
 
     try {
@@ -80,7 +82,24 @@ export async function deleteTask(req, res) {
 
 export async function getTasks(req, res){
     try {
-        const tasks = await Task.find()
+        let tasks;
+        const userRole = req.user.role;
+
+        const userEmail = req.user.email;
+        const user = await User.findOne({ email: userEmail });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        if(userRole==="ADMIN"||userRole==="SUPER_ADMIN"){
+             tasks = await Task.find();
+        }
+
+        else{
+             tasks = await Task.find({ user: user._id });
+        }
+
         res.status(200).json(tasks);
     }
     catch (e) {
