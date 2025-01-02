@@ -44,8 +44,10 @@ export async function signUp(req, res) {
 
         // Save image if provided
         let image = "";
+        let fileUrl = "";
         if (req.file) {
-            image = req.file.filename;
+             image = req.file.filename;
+             fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
         } else if (req.body.image) {
             image = req.body.image;
         }
@@ -58,7 +60,7 @@ export async function signUp(req, res) {
             name,
             email,
             password: hashedPassword,
-            image,
+            image:fileUrl,
         });
 
         await user.save();
