@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import fs from "fs";
 import path from "path";
 import {fileURLToPath} from "url";
+import mongoose from "mongoose";
 
 
 export async function createUser(req, res) {
@@ -108,3 +109,30 @@ export async function deleteUser(req, res) {
         res.status(400).json({ error: "Server error" });
     }
 }
+
+
+export async function getUserImage(req, res) {
+    try {
+        const { id } = req.params;
+
+        // Validate if the ID is a valid MongoDB ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: 'Invalid user ID format.' });
+        }
+
+        // Fetch the user by ID
+        const user = await User.findById(id);
+
+        // Handle case where user is not found
+        if (!user) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+        // Return the user's image
+        res.status(200).json({ image: user.image });
+    } catch (e) {
+        console.error(e); // Log the error for server-side debugging
+        res.status(500).json({ error: 'An internal server error occurred.' });
+    }
+}
+
