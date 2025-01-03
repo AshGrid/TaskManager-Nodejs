@@ -1,9 +1,9 @@
-
 import Router from "express";
-import {createCategory, getCats, updateCategory} from "../controllers/categoryController.js";
-import verifyToken, {verifyAdmin} from "../middlewares/authMiddleware.js";
+import {createCategory, deleteCategory, getCats, updateCategory} from "../controllers/categoryController.js";
+import verifyToken, {verifyAdmin, verifySuperAdmin} from "../middlewares/authMiddleware.js";
 import validator from '../middlewares/validator.js';
-import{check} from "express-validator";
+import {check} from "express-validator";
+
 const router = Router();
 
 router.post("/addCat",
@@ -13,7 +13,9 @@ router.post("/addCat",
     validator,
     verifyAdmin,
     createCategory);
-router.put("/updateCat",updateCategory);
-router.get("/getCats", getCats);
+router.put("/updateCat", verifyAdmin, updateCategory);
+router.get("/getCats", verifyAdmin, getCats);
+router.delete("/delete/:id", verifyAdmin, deleteCategory);
+router.delete("deleteSA/:id", verifySuperAdmin, getCats);
 
 export default router;
