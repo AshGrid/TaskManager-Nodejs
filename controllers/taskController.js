@@ -8,15 +8,15 @@ import verifyToken, {verifyAdmin} from "../middlewares/authMiddleware.js";
 export async function createTask(req, res) {
 
     try {
-        const{name, description,priority,dueDate,category,user,status} = req.body;
+        const {name, description, priority, dueDate, category, user, status} = req.body;
 
-        const cat = await Category.findOne({name:category});
+        const cat = await Category.findOne({name: category});
         if (!cat) {
-           return  res.status(400).json({ error: "Category non existing" });
+            return res.status(400).json({error: "Category non existing"});
         }
-        const existingUser = await User.findOne({ email: user });
+        const existingUser = await User.findOne({email: user});
         if (!existingUser) {
-          return  res.status(400).json({ error: "User does not exist" });
+            return res.status(400).json({error: "User does not exist"});
         }
         const task = new Task({
             name,
@@ -31,79 +31,103 @@ export async function createTask(req, res) {
         existingUser.tasks.push(task._id);
         await existingUser.save();
         res.status(200).json({task})
-    }
-    catch (error) {
+    } catch (error) {
         console.error(error);
-      return res.status(500).json({ error: "Server error" });
+        return res.status(500).json({error: "Server error"});
     }
 }
 
 
 export async function updateTask(req, res) {
     try {
-        const{id,name, description,priority,dueDate,category,user,status} = req.body;
-        const cat = await Category.findOne({name:category});
+        const {id, name, description, priority, dueDate, category, user, status} = req.body;
+        const userRole = req.user.role;
+        const cat = await Category.findOne({name: category});
         if (!cat) {
-            return  res.status(400).json({ error: "Category non existing" });
+            return res.status(400).json({error: "Category non existing"});
         }
-        const existingUser = await User.findOne({ email: user });
+        const existingUser = await User.findOne({email: user});
         if (!existingUser) {
-            return  res.status(400).json({ error: "User does not exist" });
+            return res.status(400).json({error: "User does not exist"});
         }
 
 
-         await Task.findByIdAndUpdate({_id:id},{
-           name: name,
-           description: description,
-           priority: priority,
-           dueDate: dueDate,
-           category: cat._id,
-           user: existingUser._id,
-           status,
-       });
-        res.status(200).json({message:"task updated"})
-    }
-    catch (e) {
-        res.status(400).json({ error: "Server error",e });
+        await Task.findByIdAndUpdate({_id: id}, {
+            name: name,
+            description: description,
+            priority: priority,
+            dueDate: dueDate,
+            category: cat._id,
+            user: existingUser._id,
+            status: status,
+        });
+        res.status(200).json({message: "task updated"})
+    } catch (e) {
+        res.status(400).json({error: "Server error", e});
     }
 }
 
 export async function deleteTask(req, res) {
     try {
-        const { id } = req.body;
-        await Task.findByIdAndDelete({_id:id})
-        res.status(200).json({message:"Task deleted successfully"})
-    }
-    catch (e) {
-        res.status(400).json({ error: "Server error",e});
+        const {id} = req.body;
+        await Task.findByIdAndDelete({_id: id})
+        res.status(200).json({message: "Task deleted successfully"})
+    } catch (e) {
+        res.status(400).json({error: "Server error", e});
     }
 
 }
 
-export async function getTasks(req, res){
+export async function getTasks(req, res) {
     try {
         let tasks;
         const userRole = req.user.role;
 
         const userEmail = req.user.email;
-        const user = await User.findOne({ email: userEmail });
+        const user = await User.findOne({email: userEmail});
 
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({error: 'User not found'});
         }
 
-        if(userRole==="ADMIN"||userRole==="SUPER_ADMIN"){
-             tasks = await Task.find();
-        }
-
-        else{
-             tasks = await Task.find({ user: user._id });
+        if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
+            tasks = await Task.find();
+        } else {
+            tasks = await Task.find({user: user._id});
         }
 
         res.status(200).json(tasks);
-    }
-    catch (e) {
-        res.status(400).json({ error: "Server error",e});
+    } catch (e) {
+        res.status(400).json({error: "Server error", e});
 
+    }
+}
+
+export async function updateTaskStatus(req, res) {
+    try {
+        const {id, status} = req.body;
+        const userEmail = req.user.email;
+        const userRole = req.user.role;
+        const task = await Task.findById({_id: id})
+        const user = await User.findById({_id: task.user})
+        if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
+            await Task.findByIdAndUpdate({_id: id}, {
+                status: status,
+            })
+            res.status(200).json({message: "task updated"})
+        } else {
+            if (userEmail !== user.email) {
+                return res.status(400).json({error: "you can't update task status"});
+            }
+        }
+
+
+        await Task.findByIdAndUpdate({_id: id}, {
+            status: status,
+        })
+        res.status(200).json({message: "task updated"})
+
+    } catch (e) {
+        res.status(400).json({error: "Server error", e});
     }
 }
